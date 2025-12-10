@@ -1,0 +1,113 @@
+from aiogram import Bot, Dispatcher, types, F
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+import asyncio
+import g4f
+
+# ----------- ТЕКСТЫ -----------
+TEX = """
+Amantay Ernar - coder, speaker, CADer
+Aripzhan Daulet - Builder, Capitan, Driver
+Nurlankyzy Karakat - SMM, Designer,Handbook Engineer
+Orumbek Alinur - CADer, Engineer
+Dumankyzy Balym - Handbook Engineer
+Kunzhan Ayazhan - Speaker Designer
+Maratzhanuly Meirlan - Builder
+Kurmanzhan Erasyl - Builder
+Esenkeldi Inkar - Outreach
+Tasbolat Gulsim - Portfolio Engineer 
+Eryk Turan - Driver, Builder
+Tolegen Abdimurat - Driver, CADer
+Endykhan Karakat - Speaker, Designer
+Nurmat Balnur - Designer, SMM
+Almaskyzy Amina - SMM
+
+
+"""
+
+TEXT = """
+FIRST TECH CHALLENGE CENTRAL ASIA Республикалық Award
+ALMATY REGIONAL FIRST CHAMPIONSHIP Республикалық Award 
+FIRST TECH CHALLENGE SEASON PARTICIPANT 2023-2024 
+Международный Award
+International Haileybury FIRST CHAMPIONSHIP - 2023 Международный Award
+BREAKTHROUGH AWARD Международный Award
+ZHYLANDY REGIONAL FIRST CHAMPIONSHIP Республикалық Award
+FIRST. GLOBAL CHALLENGE 2025 KAZAKHSTAN Международный Award
+"""
+
+# ------------- TOKEN -------------
+TOKEN = "8503669068:AAGksJnX7KEwoYLazgESwtJXHxR5rSosbFw"  # ← ТВОЙ ТОКЕН СЮДА
+
+
+# ----------- БОТ ИНИЦ -----------
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+
+# ----------- МЕНЮ -----------
+def main_menu():
+    kb = ReplyKeyboardBuilder()
+    kb.button(text="ASK SOMETHINK ABOUT FTC")
+    kb.button(text="OUR AWARDS")
+    kb.button(text="TEAM MEMBERS")
+    kb.adjust(1)
+    return kb.as_markup(resize_keyboard=True)
+
+
+# ----------- /start -----------
+@dp.message(F.text == "/start")
+async def start(message: types.Message):
+    await message.answer(
+        "Hello 👋\n" "We are FTC team Antares, what do you want to know",
+        reply_markup=main_menu()
+    )
+
+
+# ----------- Жетістіктер -----------
+@dp.message(F.text == "OUR AWARDS")
+async def achievements(message: types.Message):
+    await message.answer(TEXT)
+
+
+# ----------- Негізін қалаушылар -----------
+@dp.message(F.text == "TEAM MEMBERS")
+async def founders(message: types.Message):
+    await message.answer(TEX)
+
+
+# ----------- Сұрақ қою -----------
+@dp.message(F.text == "ASK SOMETHINK ABOUT FTC")
+async def ask(message: types.Message):
+    await message.answer("Give me a question🧬")
+
+
+# ----------- AI ЖАУАП -----------
+@dp.message()
+async def ai_answer(message: types.Message):
+    try:
+        wait_msg = await message.answer("1 minute... ⏳")
+
+        response = await g4f.ChatCompletion.create_async(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": message.text}]
+        )
+
+        if not response or response.strip() == "":
+            await wait_msg.edit_text("⚠️ AI жауап бермеді.")
+            return
+
+        await wait_msg.edit_text(response)
+
+    except Exception as e:
+        await message.answer("⚠️ Қате шықты. Қайтадан жазып көр.")
+        print("AI ERROR:", e)
+
+
+# ----------- ЗАПУСК -----------
+async def main():
+    print("Бот іске қосылды...")
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
